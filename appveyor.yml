@@ -1,0 +1,16 @@
+image: ubuntu/latest
+
+environment:
+  matrix:
+    - ARCH: amd64
+    - ARCH: arm64
+
+before_build:
+  - sudo apt-get update
+  - sudo apt-get install -y nodejs npm
+
+build_script:
+  - git clone https://github.com/ZHANGTIANYAO1/TS3AudioBot-NetEaseCloudmusic-plugin.git
+  - cd TS3AudioBot-NetEaseCloudmusic-plugin
+  - npm install
+  - npm run build
