@@ -1,4 +1,4 @@
-name: Build for ARM64
+name: Build and Test
 
 on:
   push:
@@ -10,19 +10,42 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        architecture: [arm64]
+        os: [ubuntu-20.04]
+        arch: [arm64]
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v2
         with:
-          node-version: 14
+          dotnet-version: 3.1
 
-      - name: Install dependencies and build
+      - name: Install QEMU
         run: |
-          cd path/to/your/project
-          npm install
-          npm run build
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+
+      - name: Set up QEMU
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          
+      - name: Build and Test
+        run: |
+          dotnet restore
+          dotnet build -c Release
+          dotnet test
+
+      - name: Publish Artifact
+        if: success()
+        run: |
+          mkdir -p dist
+          dotnet publish -c Release -o dist
+
+      - name: Upload Artifact
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-app
+          path: dist
